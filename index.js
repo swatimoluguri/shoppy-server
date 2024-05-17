@@ -241,6 +241,8 @@ app.post("/order-details", async (req, res) => {
 
 app.post("/sign-up", async (req, res) => {
   const { firstName, lastName, email } = req.body.formData;
+  const hashedPassword = await bcrypt.hash(req.body.formData.password, 10);
+  req.body.formData.password=hashedPassword;
   const userModel = getUserModel();
   const cartModel = getCartModel();
   const alreadyExisting = await userModel.findOne({ email: email });
@@ -432,6 +434,7 @@ app.post("/verify-otp", async (req, res) => {
 
 app.post("/change-password", async (req, res) => {
   const { newPassword, email } = req.body;
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
   const userModel = getUserModel();
   try {
     const user = await userModel.findOne({ email: email });
@@ -441,7 +444,7 @@ app.post("/change-password", async (req, res) => {
         .json({ message: "No user found for entered email" });
     } else {
       await userModel
-        .findOneAndUpdate({ email: email }, { $set: { password: newPassword } })
+        .findOneAndUpdate({ email: email }, { $set: { password: hashedPassword } })
         .then(() => {
           res.status(200).json({ redirect: "/signin" });
         });
